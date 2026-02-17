@@ -249,10 +249,8 @@
         <button id="btnL">◀ 左</button>
         <button id="btnJ">▲ 二段跳</button>
         <button id="btnR">右 ▶</button>
-        <button id="btnAttack"></button>
     </div>
     <div class="action-bar">
-        <button id="jumpBig">🦘 跳跃 (空格/↑)</button>
         <button id="attackBig">👋 出掴 (J)</button>
         <button id="menuBtn">📱 菜单</button>
         <button id="restartBtn">🔄 重玩</button>
@@ -1224,12 +1222,6 @@
     
     document.getElementById('btnJ').addEventListener('mousedown',e=>{e.preventDefault(); doJump();});
     document.getElementById('btnJ').addEventListener('touchstart',e=>{e.preventDefault(); doJump();});
-    
-    document.getElementById('btnAttack').addEventListener('mousedown',e=>{e.preventDefault(); performAttack();});
-    document.getElementById('btnAttack').addEventListener('touchstart',e=>{e.preventDefault(); performAttack();});
-    
-    document.getElementById('jumpBig').addEventListener('mousedown',e=>{e.preventDefault(); doJump();});
-    document.getElementById('jumpBig').addEventListener('touchstart',e=>{e.preventDefault(); doJump();});
     
     document.getElementById('attackBig').addEventListener('mousedown',e=>{e.preventDefault(); performAttack();});
     document.getElementById('attackBig').addEventListener('touchstart',e=>{e.preventDefault(); performAttack();});
