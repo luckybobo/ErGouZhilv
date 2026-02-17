@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>重生之我是二狗之前往二七拯救美女</title>
-      <style>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -19,6 +19,7 @@
             align-items: center;
             justify-content: center;
             font-family: 'Courier New', monospace;
+            padding: 10px;
         }
         .game-wrapper {
             background: #2d6d84;
@@ -26,12 +27,15 @@
             border-radius: 36px;
             box-shadow: 0 15px 20px rgba(0,0,0,0.7);
             position: relative;
-            max-width: 100%;
+            width: 100%;
+            max-width: 1600px;  /* 限制最大宽度 */
+            margin: 0 auto;
         }
         canvas {
             display: block;
             width: 100%;
             height: auto;
+            aspect-ratio: 1600 / 650;  /* 强制横屏宽高比 */
             border-radius: 28px;
             background: #b5def5;
             box-shadow: inset 0 -5px 0 #3d7188, 0 10px 10px rgba(0,0,0,0.5);
@@ -57,10 +61,11 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;  /* 防止文字换行 */
         }
         .mobile-row {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             justify-content: center;
             margin: 8px 0 5px;
             flex-wrap: wrap;
@@ -99,6 +104,7 @@
             color: #103f4f;
             box-shadow: 0 5px 0 #8b6d44, 0 5px 10px black;
             min-width: 90px;
+            cursor: pointer;
         }
         .action-bar button:active {
             transform: translateY(3px);
@@ -132,10 +138,6 @@
             text-align: center;
             margin-bottom: 15px;
             text-shadow: 3px 3px 0 #1d4455;
-        }
-        .menu-panel h3 {
-            font-size: 1.8rem;
-            margin: 15px 0 10px;
         }
         .menu-panel button {
             width: 100%;
@@ -217,24 +219,30 @@
             text-align: center;
             white-space: pre-line;
         }
-        .boss-hp-bar {
-            width: 100%;
-            height: 30px;
-            background: #333;
-            border: 3px solid #ffd966;
-            border-radius: 15px;
-            margin: 10px 0;
-            overflow: hidden;
+        
+        /* 手机横屏适配 */
+        @media (max-width: 800px) {
+            .hud { font-size: 0.9rem; }
+            .hud-item { padding: 3px 10px; }
+            .mobile-row button { padding: 6px 12px; font-size: 1.3rem; }
+            .menu-panel { min-width: 300px; padding: 15px; }
         }
-        .boss-hp-fill {
-            height: 100%;
-            background: #ff4444;
-            width: 100%;
-            transition: width 0.3s;
-        }
-        @media (max-width: 600px) {
-            .hud { font-size: 1rem; }
-            .mobile-row button { padding: 8px 12px; font-size: 1.4rem; }
+        
+        @media (orientation: portrait) {
+            body::before {
+                content: "请将手机旋转为横屏以获得最佳体验";
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #ff6b6b;
+                color: white;
+                padding: 20px;
+                border-radius: 20px;
+                z-index: 1000;
+                font-size: 1.5rem;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -246,6 +254,8 @@
         <div class="hud-item">👋 <span id="atkDisplay">1</span></div>
         <div class="hud-item">💩 <span id="coinDisplay">0</span></div>
         <div class="hud-item">🍖 <span id="starDisplay">0</span>/<span id="totalStarsDisplay">20</span></div>
+        <div class="hud-item">✨暴掴 <span id="critDisplay">0</span>%</div>
+        <div class="hud-item">💫掴晕 <span id="stunDisplay">0</span>%</div>
         <div id="messageBox" style="background:#2e2b1a; padding:5px 20px; border-radius:40px;">菜单中</div>
     </div>
     <div class="mobile-row">
@@ -313,10 +323,15 @@
             <span>15 💩</span>
             <button id="buyAtkBtn">购买</button>
         </div>
+            <div class="shop-item">
+            <span>✨ 暴击率 +5%</span>
+            <span>15 💩</span>
+            <button id="buyCritBtn">购买</button>
+        </div>
         <div class="shop-item">
-            <span>💊 回复1❤️</span>
-            <span>8 💩</span>
-            <button id="buyHealBtn">购买</button>
+            <span>💫 眩晕率 +5%</span>
+            <span>15 💩</span>
+            <button id="buyStunBtn">购买</button>
         </div>
         <button id="backFromShop">🔙 返回</button>
     </div>
@@ -400,7 +415,8 @@
     const endingContinueBtn = document.getElementById('endingContinueBtn');
     const buyHp = document.getElementById('buyHpBtn');
     const buyAtk = document.getElementById('buyAtkBtn');
-    const buyHeal = document.getElementById('buyHealBtn');
+    const buyCrit = document.getElementById('buyCritBtn');
+    const buyStun = document.getElementById('buyStunBtn');
     const difficultySelect = document.getElementById('difficultySelect');
     const masterVolume = document.getElementById('masterVolume');
     const sfxVolume = document.getElementById('sfxVolume');
@@ -530,7 +546,7 @@
             worldWidth: 18000,  // 增加以适应横屏
             goalX: 17500,
             stars: 20,
-            baseEnemyHp: 2,
+            baseEnemyHp: 4,
             basePlatforms: 'normal',
             unlocked: true
         },
@@ -540,7 +556,7 @@
             worldWidth: 24000,
             goalX: 23500,
             stars: 25,
-            baseEnemyHp: 3,
+            baseEnemyHp: 8,
             basePlatforms: 'advanced',
             unlocked: false
         },
@@ -550,7 +566,7 @@
             worldWidth: 30000,
             goalX: 29500,
             stars: 30,
-            baseEnemyHp: 4,
+            baseEnemyHp: 16,
             basePlatforms: 'expert',
             unlocked: false,
             hasBoss: true
@@ -573,7 +589,7 @@
     // 玩家属性
     let player = {
         x: 200, y: GROUND_Y - 55,
-        w: 60, h: 60,
+        w: 100, h: 100,
         vx: 0, vy: 0,
         onGround: false,
         doubleJumpUsed: false,
@@ -587,7 +603,7 @@
         attackTimer: 0
     };
     let hand = {
-        w: 60, h: 60,
+        w: 100, h: 100,
     };
 
     // 游戏元素
@@ -625,15 +641,21 @@
             { x: 0, y: GROUND_Y, w: WORLD_WIDTH, h: 70, type: 'normal' }
         ];
 
-        const platformCount = levelId === 1 ? 20 : (levelId === 2 ? 35 : 45);
+        const platformCount = levelId === 1 ? 40 : (levelId === 2 ? 45 : 50);
         for(let i=0; i<platformCount; i++) {
-            let x = 400 + i * 600 + Math.random()*300;
-            if(x > GOAL_X-500) break;
+            let x = 400 + i * level.worldWidth/platformCount + Math.random()*300;
+            if(x > GOAL_X-100) break;
             
             let y = GROUND_Y - 100 - Math.random() * 150;
             if(y < 150) y = 200;
             
             let type = 'normal';
+            if(levelId >= 1) {
+                let rand = Math.random();
+                if(rand < 0.1) type = 'bounce';
+                else if(rand < 0.2) type = 'break';
+                else if(rand < 0.3) type = 'moving';
+            }
             
             if(levelId >= 2) {
                 let rand = Math.random();
@@ -654,8 +676,8 @@
                 bounceFactor: type === 'bounce' ? 1.8 : undefined,
                 broken: false,
                 baseX: type === 'moving' ? x : undefined,
-                moveRange: type === 'moving' ? 200 : undefined,
-                speed: type === 'moving' ? 1 : undefined,
+                moveRange: type === 'moving' ? 300 : undefined,
+                speed: type === 'moving' ? 0.2 : undefined,
                 dir: type === 'moving' ? 1 : undefined
             });
         }
@@ -677,12 +699,17 @@
 
         // 敌人
         enemies = [];
-        const enemyCount = levelId * 6;
+        const enemyCount = levelId * 8;
         for(let i=0; i<enemyCount; i++) {
-            let x = 400 + i * 1200 + Math.random()*500;
-            if(x > GOAL_X-500) break;
+            let x = 400 + i * level.worldWidth/enemyCount + Math.random()*500;
+            if(x > GOAL_X-100) break;
             
             let type = 'walker';
+            if(levelId >= 1) {
+                let rand = Math.random();
+                if(rand < 0.2) type = 'jumper';
+                else if(rand < 0.3) type = 'flyer';
+            }
             if(levelId >= 2) {
                 let rand = Math.random();
                 if(rand < 0.3) type = 'jumper';
@@ -695,16 +722,17 @@
             }
             
             let hp = level.baseEnemyHp * difficulty;
-            if(type === 'jumper') hp = Math.floor(hp * 1.5);
-            if(type === 'flyer') hp = Math.floor(hp * 2);
+            if(type == 'walker') hp = Math.floor(hp );
+            if(type == 'jumper') hp = Math.floor(hp * 1.5 +Math.random()*level.baseEnemyHp/2);
+            if(type == 'flyer') hp = Math.floor(hp * 2-Math.random()*level.baseEnemyHp/2);
             
             // 增大敌人尺寸
-            let size = type === 'flyer' ? 48 : (type === 'jumper' ? 62 : 115);
+            let size = type === 'flyer' ? 48 : (type === 'jumper' ? 95+ Math.random()*25 : 100+ Math.random()*40);
             
             enemies.push({
                 x: x,
                 y: type === 'flyer' ? 200 + Math.random()*150 : GROUND_Y - size - 5,
-                w: type === 'flyer' ? 38 : (type === 'jumper' ? 40 : 70),
+                w: type === 'flyer' ? 38 : (type === 'jumper' ? 60+Math.random()*20 : 70+Math.random()*20),
                 h: size,
                 type: type,
                 hp: hp,
@@ -863,6 +891,42 @@
         }
         
         if(boss.invincible > 0) boss.invincible--;
+    }
+    
+    function addDeathEffect(x, y) {
+        deathEffects.push({
+            worldX: x, worldY: y,
+            timer: 20,  // 缩短持续时间
+            scale: 1.0,
+            alpha: 1.0
+        });
+    }
+
+    function updateEffects() {
+        // 只更新死亡动画
+        for (let i = deathEffects.length - 1; i >= 0; i--) {
+            deathEffects[i].timer--;
+            deathEffects[i].scale = 1 + (20 - deathEffects[i].timer) / 20;
+            deathEffects[i].alpha = deathEffects[i].timer / 20;
+            if (deathEffects[i].timer <= 0) {
+                deathEffects.splice(i, 1);
+            }
+        }
+    }
+    // 绘制死亡特效
+    function drawDeathEffects(cameraX) {
+        deathEffects.forEach(effect => {
+            ctx.save();
+            ctx.translate(effect.worldX - cameraX, effect.worldY);
+            ctx.globalAlpha = effect.alpha;
+            ctx.scale(effect.scale, effect.scale);
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 15;
+            ctx.font = 'bold 50px monospace';
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillText('💥', -25, -25);
+            ctx.restore();
+        });
     }
 
     // 购买
@@ -1300,7 +1364,6 @@
 
     buyHp.addEventListener('click', ()=>buyItem('hp'));
     buyAtk.addEventListener('click', ()=>buyItem('atk'));
-    buyHeal.addEventListener('click', ()=>buyItem('heal'));
 
     difficultySelect.addEventListener('change', e=>{ difficulty = parseInt(e.target.value); });
     
