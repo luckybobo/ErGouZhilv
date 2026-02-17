@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>重生之我是二狗之前往二七拯救美女</title>
-    <style>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+     <style>
         * {
             margin: 0;
             padding: 0;
@@ -12,15 +11,30 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
+        
+        /* 强制横屏样式 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
         body {
             background: #1a3e4a;
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Courier New', monospace;
-            padding: 10px;
+            padding: 0;
+            transform: rotate(0deg);
         }
+        
+        /* 横屏容器 */
         .game-wrapper {
             background: #2d6d84;
             padding: 15px;
@@ -28,19 +42,22 @@
             box-shadow: 0 15px 20px rgba(0,0,0,0.7);
             position: relative;
             width: 100%;
-            max-width: 1600px;  /* 限制最大宽度 */
+            max-width: 1600px;
             margin: 0 auto;
+            transition: transform 0.3s;
         }
+        
         canvas {
             display: block;
             width: 100%;
             height: auto;
-            aspect-ratio: 1600 / 650;  /* 强制横屏宽高比 */
+            aspect-ratio: 1600 / 650;
             border-radius: 28px;
             background: #b5def5;
             box-shadow: inset 0 -5px 0 #3d7188, 0 10px 10px rgba(0,0,0,0.5);
             touch-action: none;
         }
+        
         .hud {
             display: flex;
             justify-content: space-between;
@@ -53,6 +70,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        
         .hud-item {
             background: #2a3b35;
             padding: 5px 18px;
@@ -61,8 +79,9 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            white-space: nowrap;  /* 防止文字换行 */
+            white-space: nowrap;
         }
+        
         .mobile-row {
             display: flex;
             gap: 15px;
@@ -70,6 +89,7 @@
             margin: 8px 0 5px;
             flex-wrap: wrap;
         }
+        
         .mobile-row button {
             padding: 8px 20px;
             font-size: 1.6rem;
@@ -82,17 +102,23 @@
             font-weight: bold;
             color: #134257;
             min-width: 80px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
         }
+        
         .mobile-row button:active {
             transform: translateY(4px);
             box-shadow: 0 2px 0 #356882, 0 4px 8px black;
         }
+        
         .action-bar {
             display: flex;
             gap: 8px;
             margin-top: 12px;
             flex-wrap: wrap;
         }
+        
         .action-bar button {
             flex: 1;
             background: #f5cf8b;
@@ -105,11 +131,48 @@
             box-shadow: 0 5px 0 #8b6d44, 0 5px 10px black;
             min-width: 90px;
             cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
         }
+        
         .action-bar button:active {
             transform: translateY(3px);
             box-shadow: 0 2px 0 #8b6d44, 0 4px 8px black;
         }
+        
+        /* 横屏提示层 */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .orientation-overlay .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: rotate 2s infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(90deg); }
+            75% { transform: rotate(90deg); }
+            100% { transform: rotate(90deg); }
+        }
+        
         /* 菜单遮罩 */
         .menu-overlay {
             position: fixed;
@@ -120,6 +183,7 @@
             align-items: center;
             z-index: 100;
         }
+        
         .menu-panel {
             background: #3f7a8c;
             padding: 25px;
@@ -127,18 +191,20 @@
             border: 6px solid #fedb9f;
             box-shadow: 0 20px 30px black;
             min-width: 400px;
-            max-width: 70%;
+            max-width: 80%;
             color: #fef6d2;
             font-weight: bold;
             max-height: 80vh;
             overflow-y: auto;
         }
+        
         .menu-panel h2 {
             font-size: 2.2rem;
             text-align: center;
             margin-bottom: 15px;
             text-shadow: 3px 3px 0 #1d4455;
         }
+        
         .menu-panel button {
             width: 100%;
             padding: 12px;
@@ -152,10 +218,12 @@
             box-shadow: 0 5px 0 #8b6d44;
             cursor: pointer;
         }
+        
         .menu-panel button:active {
             transform: translateY(3px);
             box-shadow: 0 2px 0 #8b6d44;
         }
+        
         .setting-item {
             display: flex;
             justify-content: space-between;
@@ -163,9 +231,11 @@
             margin: 15px 0;
             font-size: 1.3rem;
         }
+        
         .setting-item input[type=range] {
             width: 150px;
         }
+        
         .shop-item {
             display: flex;
             justify-content: space-between;
@@ -178,18 +248,21 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        
         .shop-item button {
             width: auto;
             padding: 5px 20px;
             margin: 0;
             font-size: 1.2rem;
         }
+        
         .level-select {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin: 15px 0;
         }
+        
         .level-btn {
             padding: 20px 10px;
             font-size: 1.3rem;
@@ -202,16 +275,19 @@
             gap: 8px;
             cursor: pointer;
         }
+        
         .level-btn.locked {
             background: #5a5a5a;
             border-color: #888;
             opacity: 0.7;
             cursor: not-allowed;
         }
+        
         .level-stars {
             font-size: 1.2rem;
             color: #ffd966;
         }
+        
         .story-text {
             font-size: 1.2rem;
             line-height: 1.8;
@@ -227,26 +303,15 @@
             .mobile-row button { padding: 6px 12px; font-size: 1.3rem; }
             .menu-panel { min-width: 300px; padding: 15px; }
         }
-        
-        @media (orientation: portrait) {
-            body::before {
-                content: "请将手机旋转为横屏以获得最佳体验";
-                position: fixed;
-                top: 20%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: #ff6b6b;
-                color: white;
-                padding: 20px;
-                border-radius: 20px;
-                z-index: 1000;
-                font-size: 1.5rem;
-                text-align: center;
-            }
-        }
     </style>
 </head>
 <body>
+        <!-- 横屏提示层 -->
+    <div class="orientation-overlay" id="orientationOverlay">
+        <div class="icon">📱</div>
+        <div>请将手机旋转为横屏</div>
+        <div style="font-size: 1rem; margin-top: 20px;">检测到竖屏模式，“二狗的旅程”需要横屏才能正常显示</div>
+    </div>
 <div class="game-wrapper">
     <canvas id="gameCanvas" width="1600" height="650"></canvas>
     <div class="hud">
@@ -377,6 +442,28 @@
 
 <script>
 (function(){
+     const orientationOverlay = document.getElementById('orientationOverlay');
+    const gameWrapper = document.getElementById('gameWrapper');
+    
+    function checkOrientation() {
+        if (window.innerHeight > window.innerWidth) {
+            // 竖屏
+            orientationOverlay.style.display = 'flex';
+            gameWrapper.style.display = 'none';
+        } else {
+            // 横屏
+            orientationOverlay.style.display = 'none';
+            gameWrapper.style.display = 'block';
+        }
+    }
+    
+    // 初始检查
+    checkOrientation();
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     // 显示元素
