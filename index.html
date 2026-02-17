@@ -31,7 +31,7 @@
             justify-content: center;
             font-family: 'Courier New', monospace;
             padding: 0;
-            transform: rotate(0deg);
+            /* transform: rotate(0deg); */
         }
         
         /* 横屏容器 */
@@ -45,6 +45,7 @@
             max-width: 1600px;
             margin: 0 auto;
             transition: transform 0.3s;
+            transform: rotate(0deg); /* 确保没有旋转 */
         }
         
         canvas {
@@ -306,12 +307,12 @@
     </style>
 </head>
 <body>
-        <!-- 横屏提示层 -->
+        <!-- 横屏提示层
     <div class="orientation-overlay" id="orientationOverlay">
         <div class="icon">📱</div>
         <div>请将手机旋转为横屏</div>
-        <div style="font-size: 1rem; margin-top: 20px;">检测到竖屏模式，“二狗的旅程”需要横屏才能正常显示</div>
-    </div>
+        <div style="font-size: 1rem; margin-top: 20px;">检测到竖屏模，“二狗的旅程”需要横屏才能正常显示</div>
+    </div> -->
 <div class="game-wrapper">
     <canvas id="gameCanvas" width="1600" height="650"></canvas>
     <div class="hud">
@@ -319,8 +320,8 @@
         <div class="hud-item">👋 <span id="atkDisplay">1</span></div>
         <div class="hud-item">💩 <span id="coinDisplay">0</span></div>
         <div class="hud-item">🍖 <span id="starDisplay">0</span>/<span id="totalStarsDisplay">20</span></div>
-        <div class="hud-item">✨暴掴 <span id="critDisplay">0</span>%</div>
-        <div class="hud-item">💫掴晕 <span id="stunDisplay">0</span>%</div>
+        <!-- <div class="hud-item">✨暴掴 <span id="critDisplay">0</span>%</div> -->
+        <!-- <div class="hud-item">💫掴晕 <span id="stunDisplay">0</span>%</div> -->
         <div id="messageBox" style="background:#2e2b1a; padding:5px 20px; border-radius:40px;">菜单中</div>
     </div>
     <div class="mobile-row">
@@ -416,11 +417,11 @@
         </div>
         <div class="setting-item">
             <span>🔊 主音量</span>
-            <input type="range" id="masterVolume" min="0" max="100" value="0">
+            <input type="range" id="masterVolume" min="0" max="100" value="100">
         </div>
         <div class="setting-item">
             <span>🔊 音效音量</span>
-            <input type="range" id="sfxVolume" min="0" max="100" value="0">
+            <input type="range" id="sfxVolume" min="0" max="100" value="100">
         </div>
         <button id="backFromSettings">🔙 返回</button>
     </div>
@@ -442,27 +443,6 @@
 
 <script>
 (function(){
-     const orientationOverlay = document.getElementById('orientationOverlay');
-    const gameWrapper = document.getElementById('gameWrapper');
-    
-    function checkOrientation() {
-        if (window.innerHeight > window.innerWidth) {
-            // 竖屏
-            orientationOverlay.style.display = 'flex';
-            gameWrapper.style.display = 'none';
-        } else {
-            // 横屏
-            orientationOverlay.style.display = 'none';
-            gameWrapper.style.display = 'block';
-        }
-    }
-    
-    // 初始检查
-    checkOrientation();
-    
-    // 监听窗口大小变化
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -545,8 +525,8 @@
         sfxGain = audioCtx.createGain();
         masterGain.connect(audioCtx.destination);
         sfxGain.connect(masterGain);
-        masterGain.gain.value = 0;
-        sfxGain.gain.value = 0;
+        masterGain.gain.value = 2;
+        sfxGain.gain.value = 2;
     }
 
     function playSound(type) {
@@ -569,6 +549,7 @@
             case 'attack': freq = 220; duration = 0.1; break;
             case 'kill': freq = 110; duration = 0.3; break;
             case 'coin': freq = 783.99; duration = 0.1; break;
+            case 'hit': freq = 330; duration = 0.08; break;  // 短促的命中音
             case 'hurt': freq = 174.61; duration = 0.2; break;
             case 'buy': freq = 659.25; duration = 0.2; break;
             case 'bossHurt': freq = 82.41; duration = 0.3; break;
@@ -633,7 +614,7 @@
             worldWidth: 18000,  // 增加以适应横屏
             goalX: 17500,
             stars: 20,
-            baseEnemyHp: 4,
+            baseEnemyHp: 2,
             basePlatforms: 'normal',
             unlocked: true
         },
@@ -643,7 +624,7 @@
             worldWidth: 24000,
             goalX: 23500,
             stars: 25,
-            baseEnemyHp: 8,
+            baseEnemyHp: 4,
             basePlatforms: 'advanced',
             unlocked: false
         },
@@ -653,7 +634,7 @@
             worldWidth: 30000,
             goalX: 29500,
             stars: 30,
-            baseEnemyHp: 16,
+            baseEnemyHp: 8,
             basePlatforms: 'expert',
             unlocked: false,
             hasBoss: true
@@ -809,9 +790,9 @@
             }
             
             let hp = level.baseEnemyHp * difficulty;
-            if(type == 'walker') hp = Math.floor(hp );
-            if(type == 'jumper') hp = Math.floor(hp * 1.5 +Math.random()*level.baseEnemyHp/2);
-            if(type == 'flyer') hp = Math.floor(hp * 2-Math.random()*level.baseEnemyHp/2);
+            if(type == 'walker') hp = Math.floor(hp +Math.random()*2);
+            if(type == 'jumper') hp = Math.floor(hp * 1.5 +Math.random()*3);
+            if(type == 'flyer') hp = Math.floor(hp * 1.2 - Math.random()*2);
             
             // 增大敌人尺寸
             let size = type === 'flyer' ? 48 : (type === 'jumper' ? 95+ Math.random()*25 : 100+ Math.random()*40);
@@ -979,42 +960,6 @@
         
         if(boss.invincible > 0) boss.invincible--;
     }
-    
-    function addDeathEffect(x, y) {
-        deathEffects.push({
-            worldX: x, worldY: y,
-            timer: 20,  // 缩短持续时间
-            scale: 1.0,
-            alpha: 1.0
-        });
-    }
-
-    function updateEffects() {
-        // 只更新死亡动画
-        for (let i = deathEffects.length - 1; i >= 0; i--) {
-            deathEffects[i].timer--;
-            deathEffects[i].scale = 1 + (20 - deathEffects[i].timer) / 20;
-            deathEffects[i].alpha = deathEffects[i].timer / 20;
-            if (deathEffects[i].timer <= 0) {
-                deathEffects.splice(i, 1);
-            }
-        }
-    }
-    // 绘制死亡特效
-    function drawDeathEffects(cameraX) {
-        deathEffects.forEach(effect => {
-            ctx.save();
-            ctx.translate(effect.worldX - cameraX, effect.worldY);
-            ctx.globalAlpha = effect.alpha;
-            ctx.scale(effect.scale, effect.scale);
-            ctx.shadowColor = '#ffaa00';
-            ctx.shadowBlur = 15;
-            ctx.font = 'bold 50px monospace';
-            ctx.fillStyle = '#ffaa00';
-            ctx.fillText('💥', -25, -25);
-            ctx.restore();
-        });
-    }
 
     // 购买
     function buyItem(type) {
@@ -1027,10 +972,6 @@
         } else if(type==='atk' && player.coins>=15) {
             player.atk += 1;
             player.coins -= 15;
-            playSound('buy');
-        } else if(type==='heal' && player.coins>=8 && player.hp < player.maxHp) {
-            player.hp = Math.min(player.maxHp, player.hp+1);
-            player.coins -= 8;
             playSound('buy');
         }
         updateUI();
@@ -1052,6 +993,8 @@
             if(!e.active) continue;
             let dx = player.dir===1 ? (e.x - (player.x+player.w)) : (player.x - (e.x+e.w));
             if(Math.abs(dx) < attackRange && Math.abs(e.y - player.y) < 80) {
+            // ===== 添加命中音效 =====
+            playSound('hit');  // 命中音效
                 e.hp -= player.atk;
                 if(e.hp <= 0) {
                     e.active = false;
@@ -1455,11 +1398,11 @@
     difficultySelect.addEventListener('change', e=>{ difficulty = parseInt(e.target.value); });
     
     masterVolume.addEventListener('input', e=>{ 
-        if(masterGain) masterGain.gain.value = e.target.value/100; 
+        if(masterGain) masterGain.gain.value = e.target.value/50; 
     });
     
     sfxVolume.addEventListener('input', e=>{ 
-        if(sfxGain) sfxGain.gain.value = e.target.value/100; 
+        if(sfxGain) sfxGain.gain.value = e.target.value/50; 
     });
 
     restartBtn.addEventListener('click', (e) => {
