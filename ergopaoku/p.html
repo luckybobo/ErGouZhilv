@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>简约跑酷</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: #2b4f5e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+        }
+        .game-box {
+            background: #4d7b8f;
+            padding: 15px;
+            border-radius: 32px;
+            box-shadow: 0 15px 20px rgba(0,0,0,0.6);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 24px;
+            background: #b0d1e4;
+            box-shadow: inset 0 -5px 0 #4e6b7a, 0 10px 10px rgba(0,0,0,0.4);
+            touch-action: none;
+        }
+        .panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 12px 5px 5px;
+            color: #f0e6c5;
+            text-shadow: 2px 2px 0 #1a3a47;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .hp-block {
+            background: #392e2e;
+            padding: 5px 18px;
+            border-radius: 40px;
+            border: 2px solid #ffba7a;
+        }
+        .star-block {
+            background: #2b482b;
+            padding: 5px 18px;
+            border-radius: 40px;
+            border: 2px solid #ffe28a;
+        }
+        .mobile-ctrls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 10px 0 5px;
+        }
+        .mobile-ctrls button {
+            padding: 10px 30px;
+            font-size: 2rem;
+            background: #d6ecff;
+            border: 3px solid #fff8cf;
+            border-radius: 60px;
+            box-shadow: 0 7px 0 #386882, 0 8px 12px black;
+            transition: 0.03s linear;
+            touch-action: manipulation;
+            font-weight: bold;
+            color: #173e51;
+        }
+        .mobile-ctrls button:active {
+            transform: translateY(5px);
+            box-shadow: 0 2px 0 #386882, 0 6px 10px black;
+        }
+        .bottom-btns {
+            display: flex;
+            gap: 15px;
+            margin-top: 12px;
+        }
+        .bottom-btns button {
+            flex: 1;
+            background: #f5cf8b;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #194455;
+            box-shadow: 0 6px 0 #8b6d44, 0 7px 12px black;
+            touch-action: manipulation;
+        }
+        .bottom-btns button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #8b6d44, 0 6px 10px black;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .mobile-ctrls { display: none; }
+        }
+        .image-note {
+            color: #ffd966;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            text-align: center;
+            background: #1d4455;
+            padding: 4px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="game-box">
+    <canvas id="gameCanvas" width="1000" height="450"></canvas>
+    <div class="panel">
+        <div class="hp-block"><span id="hpDisplay">❤️ 5 / 5</span></div>
+        <div class="star-block"><span id="starDisplay">⭐ 0 / 8</span></div>
+        <div id="msgBox" style="background:#352d1a; padding:5px 25px; border-radius:40px;">二七 →</div>
+    </div>
+    <!-- 手机按钮 (左/右/跳) -->
+    <div class="mobile-ctrls">
+        <button id="btnLeft">◀ 左</button>
+        <button id="btnJump">▲ 二段跳</button>
+        <button id="btnRight">右 ▶</button>
+    </div>
+    <div class="bottom-btns">
+        <button id="jumpBig">二段跳</button>
+        <button id="restartGame">重新来过</button>
+    </div>
+    <div class="image-note">
+        你能让二狗躲过阿力的追杀并抵达二七吗？快来试试吧
+    </div>
+</div>
+<script>
+(function(){
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const hpSpan = document.getElementById('hpDisplay');
+    const starSpan = document.getElementById('starDisplay');
+    const msgBox = document.getElementById('msgBox');
+
+    // ---------- 固定尺寸 ----------
+    const W = 1000, H = 450;
+    canvas.width = W; canvas.height = H;
+    const WORLD_WIDTH = 5000;          // 世界总长度
+    const GROUND_Y = H - 58;            // 地面顶部
+
+    // ---------- 极简参数 ----------
+    const GRAVITY = 0.6;
+    const JUMP_FORCE = -11;
+    const DOUBLE_JUMP_FORCE = -9.5;
+    const MOVE_SPEED = 4.8;              // 直接速度，无惯性(更简单)
+    const MAX_FALL = 14;
+
+    // 玩家结构
+    let player = {
+        x: 120, y: GROUND_Y - 50,
+        w: 50, h: 50,
+        vx: 0, vy: 0,
+        onGround: false,
+        doubleJumpUsed: false,
+        dir: 1,                // 1=右, -1=左
+        hp: 5,
+        invincible: 0
+    };
+    const MAX_HP = 5;
+
+    // 收集品 (星星) 8个
+    let stars = [
+        { x: 300, y: GROUND_Y-80, w: 20, h: 20, got: false },
+        { x: 800, y: GROUND_Y-95, w: 20, h: 20, got: false },
+        { x: 1400, y: 300, w: 20, h: 20, got: false },
+        { x: 2100, y: 260, w: 20, h: 20, got: false },
+        { x: 2800, y: 320, w: 20, h: 20, got: false },
+        { x: 3500, y: 210, w: 20, h: 20, got: false },
+        { x: 4200, y: 280, w: 20, h: 20, got: false },
+        { x: 4700, y: GROUND_Y-90, w: 20, h: 20, got: false }
+    ];
+    const TOTAL_STARS = stars.length;
+
+    // ---------- 可活动的敌人 (简单左右移动) ----------
+    let enemies = [
+        { x: 600, y: GROUND_Y-55, w: 32, h: 42, dir: 1, speed: 1.2, active: true },
+        { x: 1600, y: GROUND_Y-55, w: 32, h: 42, dir: -1, speed: 1.5, active: true },
+        { x: 2500, y: 290, w: 30, h: 38, dir: 1, speed: 1.8, active: true },   // 空中平台敌人
+        { x: 3300, y: GROUND_Y-55, w: 32, h: 42, dir: -1, speed: 1.3, active: true },
+        { x: 4000, y: 240, w: 30, h: 38, dir: 1, speed: 2.0, active: true },
+        { x: 4600, y: GROUND_Y-55, w: 32, h: 42, dir: 1, speed: 1.2, active: true }
+    ];
+
+    // 平台 (极简灰块)
+    const platforms = [
+        { x: 0, y: GROUND_Y, w: WORLD_WIDTH, h: 58 },  // 地面
+        { x: 450, y: 360, w: 90, h: 18 },
+        { x: 900, y: 310, w: 100, h: 18 },
+        { x: 1350, y: 270, w: 110, h: 18 },
+        { x: 1850, y: 320, w: 90, h: 18 },
+        { x: 2350, y: 250, w: 130, h: 18 },
+        { x: 2950, y: 290, w: 100, h: 18 },
+        { x: 3450, y: 200, w: 100, h: 18 },
+        { x: 3900, y: 260, w: 120, h: 18 },
+        { x: 4350, y: 320, w: 110, h: 18 },
+        { x: 4750, y: 370, w: 150, h: 18 }
+    ];
+
+    // 终点
+    const GOAL_X = 4880;
+    const GOAL_W = 25;
+
+    // 摄像机
+    let cameraX = 0;
+
+    // 按键状态
+    let left = false, right = false, jumpKey = false;
+
+    // 游戏状态
+    let gameActive = true, gameWin = false, gameOver = false;
+
+    function createPlayerImage() {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = 30;
+        offCanvas.height = 48;
+        const offCtx = offCanvas.getContext('2d');
+        
+        // 身体
+        offCtx.fillStyle = '#3e96c7';
+        offCtx.fillRect(0, 0, 30, 48);
+        // 眼睛
+        offCtx.fillStyle = '#fff';
+        offCtx.fillRect(18, 12, 6, 6);
+        offCtx.fillStyle = '#000';
+        offCtx.fillRect(20, 14, 3, 3);
+        // 背包
+        offCtx.fillStyle = '#2d7a9e';
+        offCtx.fillRect(25, 15, 5, 20);
+        
+        return offCanvas;
+    }
+    
+    function createEnemyImage() {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = 32;
+        offCanvas.height = 42;
+        const offCtx = offCanvas.getContext('2d');
+        
+        // 身体
+        offCtx.fillStyle = '#d94f4f';
+        offCtx.fillRect(0, 0, 32, 42);
+        // 眼睛
+        offCtx.fillStyle = '#fff';
+        offCtx.fillRect(6, 8, 6, 6);
+        offCtx.fillRect(18, 8, 6, 6);
+        offCtx.fillStyle = '#000';
+        offCtx.fillRect(8, 10, 3, 3);
+        offCtx.fillRect(20, 10, 3, 3);
+        // 牙齿
+        offCtx.fillStyle = '#fff';
+        offCtx.fillRect(10, 25, 3, 5);
+        offCtx.fillRect(18, 25, 3, 5);
+        
+        return offCanvas;
+    }
+    
+    // 创建星星图片
+    function createStarImage() {
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = 20;
+        offCanvas.height = 20;
+        const offCtx = offCanvas.getContext('2d');
+        
+        offCtx.fillStyle = '#f5d742';
+        offCtx.shadowBlur = 5;
+        offCtx.shadowColor = '#e5b800';
+        offCtx.beginPath();
+        offCtx.arc(10, 10, 8, 0, 2 * Math.PI);
+        offCtx.fill();
+        
+        return offCanvas;
+    }
+    
+    // 生成图片对象
+    // const playerImg = createPlayerImage();
+    const enemyImg = createEnemyImage();
+    const starImg = createStarImage();
+    
+    const playerImg = new Image();
+    playerImg.src = 'ergo.png';
+    
+    // const enemyImg = new Image();
+    // enemyImg.src = 'path/to/your/enemy.png';
+    
+    let imagesLoaded = 0;
+    function checkImagesLoaded() {
+        imagesLoaded++;
+        if (imagesLoaded === 2) {
+            resetAll();
+            frame();
+        }
+    }
+    playerImg.onload = checkImagesLoaded;
+    enemyImg.onload = checkImagesLoaded;
+
+    // ---------- 辅助函数 ----------
+    function updateDisplay() {
+        let collected = stars.filter(s => s.got).length;
+        starSpan.innerText = `⭐ ${collected} / ${TOTAL_STARS}`;
+        hpSpan.innerText = `❤️ ${player.hp} / ${MAX_HP}`;
+    }
+
+    function resetAll() {
+        gameActive = true;
+        gameWin = false;
+        gameOver = false;
+        player = {
+            x: 120, y: GROUND_Y - 50,
+            w: 60, h: 60,
+            vx: 0, vy: 0,
+            onGround: false,
+            doubleJumpUsed: false,
+            dir: 1,
+            hp: MAX_HP,
+            invincible: 0
+        };
+        stars.forEach(s => s.got = false);
+        // 重置敌人位置
+        enemies = [
+            { x: 600, y: GROUND_Y-55, w: 32, h: 42, dir: 1, speed: 1.2, active: true },
+            { x: 1600, y: GROUND_Y-55, w: 32, h: 42, dir: -1, speed: 1.5, active: true },
+            { x: 2500, y: 290, w: 30, h: 38, dir: 1, speed: 1.8, active: true },
+            { x: 3300, y: GROUND_Y-55, w: 32, h: 42, dir: -1, speed: 1.3, active: true },
+            { x: 4000, y: 240, w: 30, h: 38, dir: 1, speed: 2.0, active: true },
+            { x: 4600, y: GROUND_Y-55, w: 32, h: 42, dir: 1, speed: 1.2, active: true }
+        ];
+        updateDisplay();
+        msgBox.innerText = '二七 →';
+        msgBox.style.background = '#352d1a';
+    }
+
+    // 玩家受伤
+    function hurt(dmg=1) {
+        if (!gameActive || player.invincible > 0) return;
+        player.hp -= dmg;
+        player.invincible = 35;   // 无敌帧
+        if (player.hp <= 0) {
+            player.hp = 0;
+            gameActive = false;
+            gameOver = true;
+            msgBox.innerText = '💀 你没能抵达二七';
+            msgBox.style.background = '#962d2d';
+        }
+        updateDisplay();
+    }
+
+    // 二段跳逻辑
+    function doJump() {
+        if (!gameActive) return;
+        if (player.onGround) {
+            player.vy = JUMP_FORCE;
+            player.onGround = false;
+            player.doubleJumpUsed = false;
+        } else {
+            if (!player.doubleJumpUsed) {
+                player.vy = DOUBLE_JUMP_FORCE;
+                player.doubleJumpUsed = true;
+            }
+        }
+    }
+
+    // 更新敌人移动 (简单左右)
+    function updateEnemies() {
+        for (let e of enemies) {
+            if (!e.active) continue;
+            e.x += e.speed * e.dir;
+            // 边界反弹 (左右限位)
+            if (e.x < 100 || e.x > WORLD_WIDTH - 100) e.dir *= -1;
+            // 与平台粗略绑定: 不穿过地面
+            if (e.y > GROUND_Y - e.h) e.y = GROUND_Y - e.h;
+        }
+    }
+
+    // 敌人与玩家碰撞 (伤害)
+    function checkEnemyCollision() {
+        for (let e of enemies) {
+            if (!e.active) continue;
+            if (player.x < e.x + e.w && player.x + player.w > e.x &&
+                player.y < e.y + e.h && player.y + player.h > e.y) {
+                hurt(1);
+                // 轻微击退
+                if (player.x < e.x) player.vx = -5;
+                else player.vx = 5;
+                break;
+            }
+        }
+    }
+
+    // 物理更新
+    function updateGame() {
+        if (!gameActive) return;
+        if (player.invincible > 0) player.invincible--;
+        if (left) { player.vx = -MOVE_SPEED; player.dir = -1; }
+        else if (right) { player.vx = MOVE_SPEED; player.dir = 1; }
+        else player.vx = 0;
+
+        // 移动 + 边界
+        player.x += player.vx;
+        if (player.x < 10) player.x = 10;
+        if (player.x + player.w > WORLD_WIDTH - 10) player.x = WORLD_WIDTH - player.w - 10;
+
+        // 重力
+        player.vy += GRAVITY;
+        if (player.vy > MAX_FALL) player.vy = MAX_FALL;
+        player.y += player.vy;
+
+        // 平台碰撞 (极简)
+        player.onGround = false;
+        for (let pl of platforms) {
+            if (player.x < pl.x + pl.w && player.x + player.w > pl.x) {
+                let pBot = player.y + player.h;
+                if (pBot >= pl.y && pBot <= pl.y + pl.h + 5 && player.vy >= 0) {
+                    player.y = pl.y - player.h;
+                    player.vy = 0;
+                    player.onGround = true;
+                    player.doubleJumpUsed = false;   // 落地重置二段跳
+                }
+            }
+        }
+
+        // 防掉出世界
+        if (player.y + player.h > GROUND_Y + 20) {
+            player.y = GROUND_Y - player.h;
+            player.vy = 0;
+            player.onGround = true;
+            player.doubleJumpUsed = false;
+        }
+
+        // 敌人移动
+        updateEnemies();
+
+        // 敌人伤害检测
+        checkEnemyCollision();
+
+        // 收集星星
+        for (let s of stars) {
+            if (!s.got) {
+                if (player.x < s.x + s.w && player.x + player.w > s.x &&
+                    player.y < s.y + s.h && player.y + player.h > s.y) {
+                    s.got = true;
+                    updateDisplay();
+                }
+            }
+        }
+
+        // 终点
+        if (!gameWin && player.x + player.w > GOAL_X) {
+            gameWin = true;
+            gameActive = false;
+            msgBox.innerText = '🎉 恭喜你抵达了二七!';
+            msgBox.style.background = '#3e8547';
+        }
+    }
+
+    // ---------- 绘制 (使用drawImage替换方块) ----------
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+
+        // 相机
+        let targetCam = player.x - 400;
+        targetCam = Math.max(0, Math.min(targetCam, WORLD_WIDTH - W));
+        cameraX = targetCam;
+        ctx.save();
+        ctx.translate(-cameraX, 0);
+
+        // 背景 (简单天蓝)
+        ctx.fillStyle = '#aad4f0';
+        ctx.fillRect(cameraX, 0, W, H);
+
+        // 平台 (灰色)
+        ctx.fillStyle = '#6f8f9f';
+        for (let pl of platforms) {
+            ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+            ctx.fillStyle = '#8fb0c0';
+            ctx.fillRect(pl.x, pl.y, pl.w, 4);
+            ctx.fillStyle = '#6f8f9f';
+        }
+
+        // 星星 - 使用drawImage绘制图片
+        for (let s of stars) {
+            if (!s.got) {
+                // 使用drawImage绘制星星图片
+                ctx.drawImage(starImg, s.x, s.y, s.w, s.h);
+            }
+        }
+
+        // 敌人 - 使用drawImage绘制图片
+        for (let e of enemies) {
+            if (!e.active) continue;
+            // 无敌闪烁效果 (如果是玩家受伤闪烁，敌人不变)
+            ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h);
+        }
+
+        // 终点 (简单门)
+        ctx.fillStyle = '#c4592b';
+        ctx.fillRect(GOAL_X, GROUND_Y-100, 20, 100);
+        ctx.fillStyle = '#fad03b';
+        ctx.fillRect(GOAL_X-5, GROUND_Y-130, 30, 30);
+
+        // 玩家
+        if (player.invincible > 0 && (Math.floor(Date.now()/150)%2===0)) {
+            ctx.globalAlpha = 0.5;  // 半透明表示无敌
+        }
+        // 根据朝向绘制 (如果需要翻转图片)
+        if (player.dir === 1) {
+            ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+        } else {
+            // 向左时翻转图片
+            ctx.save();
+            ctx.translate(player.x + player.w, player.y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(playerImg, 0, 0, player.w, player.h);
+            ctx.restore();
+        }
+        ctx.globalAlpha = 1.0;
+        
+        // 二段跳指示 (小翅膀)
+        if (!player.onGround && !player.doubleJumpUsed) {
+            ctx.fillStyle = '#f5e56b';
+            ctx.fillRect(player.x-8, player.y+10, 6, 12);
+            ctx.fillRect(player.x+player.w+2, player.y+10, 6, 12);
+        }
+
+        ctx.restore();
+
+        // HUD 文字
+        ctx.font = 'bold 22px "Courier New"';
+        ctx.fillStyle = '#143b47';
+        ctx.fillText(`🚩 ${Math.floor(player.x)}`, 800, 60);
+        if (gameOver) {
+            ctx.font = 'bold 48px sans-serif';
+            ctx.fillStyle = '#9d2a2a';
+            ctx.fillText('你的二狗精尽而亡了!', 250, 220);
+        }
+
+        requestAnimationFrame(frame);
+    }
+
+    function frame() {
+        updateGame();
+        draw();
+    }
+
+    // ---------- 事件绑定 ----------
+    function handleKeyDown(e) {
+        const k = e.key;
+        if (!gameActive) return;
+        if (k === 'ArrowLeft' || k === 'a' || k === 'A') { left = true; e.preventDefault(); }
+        if (k === 'ArrowRight' || k === 'd' || k === 'D') { right = true; e.preventDefault(); }
+        if (k === ' ' || k === 'Space' || k === 'ArrowUp' || k === 'w' || k === 'W') {
+            e.preventDefault();
+            if (!jumpKey) { doJump(); jumpKey = true; }
+        }
+    }
+    function handleKeyUp(e) {
+        const k = e.key;
+        if (k === 'ArrowLeft' || k === 'a' || k === 'A') { left = false; e.preventDefault(); }
+        if (k === 'ArrowRight' || k === 'd' || k === 'D') { right = false; e.preventDefault(); }
+        if (k === ' ' || k === 'Space' || k === 'ArrowUp' || k === 'w' || k === 'W') {
+            jumpKey = false; e.preventDefault();
+        }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    // 手机按钮
+    const btnL = document.getElementById('btnLeft');
+    const btnR = document.getElementById('btnRight');
+    const btnJ = document.getElementById('btnJump');
+    const jumpBig = document.getElementById('jumpBig');
+    const restartBtn = document.getElementById('restartGame');
+
+    function startL(e) { e.preventDefault(); left = true; }
+    function stopL(e) { left = false; }
+    function startR(e) { e.preventDefault(); right = true; }
+    function stopR(e) { right = false; }
+    function jumpHandler(e) { e.preventDefault(); doJump(); }
+
+    btnL.addEventListener('mousedown', startL);
+    btnL.addEventListener('mouseup', stopL);
+    btnL.addEventListener('mouseleave', stopL);
+    btnL.addEventListener('touchstart', startL, {passive:false});
+    btnL.addEventListener('touchend', stopL);
+
+    btnR.addEventListener('mousedown', startR);
+    btnR.addEventListener('mouseup', stopR);
+    btnR.addEventListener('mouseleave', stopR);
+    btnR.addEventListener('touchstart', startR, {passive:false});
+    btnR.addEventListener('touchend', stopR);
+
+    btnJ.addEventListener('mousedown', jumpHandler);
+    btnJ.addEventListener('touchstart', jumpHandler, {passive:false});
+    jumpBig.addEventListener('mousedown', jumpHandler);
+    jumpBig.addEventListener('touchstart', jumpHandler, {passive:false});
+
+    restartBtn.addEventListener('click', (e) => { e.preventDefault(); resetAll(); });
+    restartBtn.addEventListener('touchstart', (e) => { e.preventDefault(); resetAll(); });
+
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('touchstart', e => e.preventDefault());
+
+    // 初始化
+    resetAll();
+    frame();
+})();
+</script>
+</body>
+</html>
