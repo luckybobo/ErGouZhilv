@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>重生之我是二狗之前往二七拯救美女</title>
-    <style>
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+     <style>
         * {
             margin: 0;
             padding: 0;
@@ -12,30 +11,54 @@
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
+        
+        /* 强制横屏样式 */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
         body {
             background: #1a3e4a;
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Courier New', monospace;
+            padding: 0;
+            /* transform: rotate(0deg); */
         }
+        
+        /* 横屏容器 */
         .game-wrapper {
             background: #2d6d84;
             padding: 15px;
             border-radius: 36px;
             box-shadow: 0 15px 20px rgba(0,0,0,0.7);
             position: relative;
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            transition: transform 0.3s;
+            transform: rotate(0deg); /* 确保没有旋转 */
         }
+        
         canvas {
             display: block;
             width: 100%;
             height: auto;
+            aspect-ratio: 1600 / 650;
             border-radius: 28px;
             background: #b5def5;
             box-shadow: inset 0 -5px 0 #3d7188, 0 10px 10px rgba(0,0,0,0.5);
             touch-action: none;
         }
+        
         .hud {
             display: flex;
             justify-content: space-between;
@@ -48,6 +71,7 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        
         .hud-item {
             background: #2a3b35;
             padding: 5px 18px;
@@ -56,14 +80,17 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
+        
         .mobile-row {
             display: flex;
-            gap: 12px;
+            gap: 15px;
             justify-content: center;
             margin: 8px 0 5px;
             flex-wrap: wrap;
         }
+        
         .mobile-row button {
             padding: 8px 20px;
             font-size: 1.6rem;
@@ -76,17 +103,23 @@
             font-weight: bold;
             color: #134257;
             min-width: 80px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
         }
+        
         .mobile-row button:active {
             transform: translateY(4px);
             box-shadow: 0 2px 0 #356882, 0 4px 8px black;
         }
+        
         .action-bar {
             display: flex;
             gap: 8px;
             margin-top: 12px;
             flex-wrap: wrap;
         }
+        
         .action-bar button {
             flex: 1;
             background: #f5cf8b;
@@ -98,11 +131,49 @@
             color: #103f4f;
             box-shadow: 0 5px 0 #8b6d44, 0 5px 10px black;
             min-width: 90px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
         }
+        
         .action-bar button:active {
             transform: translateY(3px);
             box-shadow: 0 2px 0 #8b6d44, 0 4px 8px black;
         }
+        
+        /* 横屏提示层 */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .orientation-overlay .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: rotate 2s infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(90deg); }
+            75% { transform: rotate(90deg); }
+            100% { transform: rotate(90deg); }
+        }
+        
         /* 菜单遮罩 */
         .menu-overlay {
             position: fixed;
@@ -113,29 +184,28 @@
             align-items: center;
             z-index: 100;
         }
+        
         .menu-panel {
             background: #3f7a8c;
             padding: 25px;
             border-radius: 50px;
             border: 6px solid #fedb9f;
             box-shadow: 0 20px 30px black;
-            min-width: 320px;
-            max-width: 90%;
+            min-width: 400px;
+            max-width: 80%;
             color: #fef6d2;
             font-weight: bold;
             max-height: 80vh;
             overflow-y: auto;
         }
+        
         .menu-panel h2 {
             font-size: 2.2rem;
             text-align: center;
             margin-bottom: 15px;
             text-shadow: 3px 3px 0 #1d4455;
         }
-        .menu-panel h3 {
-            font-size: 1.8rem;
-            margin: 15px 0 10px;
-        }
+        
         .menu-panel button {
             width: 100%;
             padding: 12px;
@@ -147,11 +217,14 @@
             color: #134d5e;
             font-weight: bold;
             box-shadow: 0 5px 0 #8b6d44;
+            cursor: pointer;
         }
+        
         .menu-panel button:active {
             transform: translateY(3px);
             box-shadow: 0 2px 0 #8b6d44;
         }
+        
         .setting-item {
             display: flex;
             justify-content: space-between;
@@ -159,9 +232,11 @@
             margin: 15px 0;
             font-size: 1.3rem;
         }
+        
         .setting-item input[type=range] {
             width: 150px;
         }
+        
         .shop-item {
             display: flex;
             justify-content: space-between;
@@ -174,18 +249,21 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        
         .shop-item button {
             width: auto;
             padding: 5px 20px;
             margin: 0;
             font-size: 1.2rem;
         }
+        
         .level-select {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin: 15px 0;
         }
+        
         .level-btn {
             padding: 20px 10px;
             font-size: 1.3rem;
@@ -196,16 +274,21 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
         }
+        
         .level-btn.locked {
             background: #5a5a5a;
             border-color: #888;
             opacity: 0.7;
+            cursor: not-allowed;
         }
+        
         .level-stars {
             font-size: 1.2rem;
             color: #ffd966;
         }
+        
         .story-text {
             font-size: 1.2rem;
             line-height: 1.8;
@@ -213,46 +296,40 @@
             text-align: center;
             white-space: pre-line;
         }
-        .boss-hp-bar {
-            width: 100%;
-            height: 30px;
-            background: #333;
-            border: 3px solid #ffd966;
-            border-radius: 15px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
-        .boss-hp-fill {
-            height: 100%;
-            background: #ff4444;
-            width: 100%;
-            transition: width 0.3s;
-        }
-        @media (max-width: 600px) {
-            .hud { font-size: 1rem; }
-            .mobile-row button { padding: 8px 12px; font-size: 1.4rem; }
+        
+        /* 手机横屏适配 */
+        @media (max-width: 800px) {
+            .hud { font-size: 0.9rem; }
+            .hud-item { padding: 3px 10px; }
+            .mobile-row button { padding: 6px 12px; font-size: 1.3rem; }
+            .menu-panel { min-width: 300px; padding: 15px; }
         }
     </style>
 </head>
 <body>
+        <!-- 横屏提示层
+    <div class="orientation-overlay" id="orientationOverlay">
+        <div class="icon">📱</div>
+        <div>请将手机旋转为横屏</div>
+        <div style="font-size: 1rem; margin-top: 20px;">检测到竖屏模，“二狗的旅程”需要横屏才能正常显示</div>
+    </div> -->
 <div class="game-wrapper">
-    <canvas id="gameCanvas" width="1200" height="550"></canvas>
+    <canvas id="gameCanvas" width="1600" height="650"></canvas>
     <div class="hud">
         <div class="hud-item">❤️ <span id="hpDisplay">5</span>/<span id="maxHpDisplay">5</span></div>
         <div class="hud-item">👋 <span id="atkDisplay">1</span></div>
         <div class="hud-item">💩 <span id="coinDisplay">0</span></div>
         <div class="hud-item">🍖 <span id="starDisplay">0</span>/<span id="totalStarsDisplay">20</span></div>
-        <div class="hud-item">🗺️ 第 <span id="levelDisplay">1</span> 关</div>
+        <!-- <div class="hud-item">✨暴掴 <span id="critDisplay">0</span>%</div> -->
+        <!-- <div class="hud-item">💫掴晕 <span id="stunDisplay">0</span>%</div> -->
         <div id="messageBox" style="background:#2e2b1a; padding:5px 20px; border-radius:40px;">菜单中</div>
     </div>
     <div class="mobile-row">
         <button id="btnL">◀ 左</button>
         <button id="btnJ">▲ 二段跳</button>
         <button id="btnR">右 ▶</button>
-        <button id="btnAttack"></button>
     </div>
     <div class="action-bar">
-        <button id="jumpBig">🦘 跳跃 (空格/↑)</button>
         <button id="attackBig">👋 出掴 (J)</button>
         <button id="menuBtn">📱 菜单</button>
         <button id="restartBtn">🔄 重玩</button>
@@ -312,10 +389,15 @@
             <span>15 💩</span>
             <button id="buyAtkBtn">购买</button>
         </div>
+            <div class="shop-item">
+            <span>✨ 暴击率 +5%</span>
+            <span>15 💩</span>
+            <button id="buyCritBtn">购买</button>
+        </div>
         <div class="shop-item">
-            <span>💊 回复1❤️</span>
-            <span>8 💩</span>
-            <button id="buyHealBtn">购买</button>
+            <span>💫 眩晕率 +5%</span>
+            <span>15 💩</span>
+            <button id="buyStunBtn">购买</button>
         </div>
         <button id="backFromShop">🔙 返回</button>
     </div>
@@ -335,11 +417,11 @@
         </div>
         <div class="setting-item">
             <span>🔊 主音量</span>
-            <input type="range" id="masterVolume" min="0" max="100" value="0">
+            <input type="range" id="masterVolume" min="0" max="100" value="100">
         </div>
         <div class="setting-item">
             <span>🔊 音效音量</span>
-            <input type="range" id="sfxVolume" min="0" max="100" value="0">
+            <input type="range" id="sfxVolume" min="0" max="100" value="100">
         </div>
         <button id="backFromSettings">🔙 返回</button>
     </div>
@@ -361,6 +443,7 @@
 
 <script>
 (function(){
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     // 显示元素
@@ -370,7 +453,6 @@
     const coinSpan = document.getElementById('coinDisplay');
     const starSpan = document.getElementById('starDisplay');
     const totalStarsSpan = document.getElementById('totalStarsDisplay');
-    const levelSpan = document.getElementById('levelDisplay');
     const msgBox = document.getElementById('messageBox');
 
     // 菜单元素
@@ -400,7 +482,8 @@
     const endingContinueBtn = document.getElementById('endingContinueBtn');
     const buyHp = document.getElementById('buyHpBtn');
     const buyAtk = document.getElementById('buyAtkBtn');
-    const buyHeal = document.getElementById('buyHealBtn');
+    const buyCrit = document.getElementById('buyCritBtn');
+    const buyStun = document.getElementById('buyStunBtn');
     const difficultySelect = document.getElementById('difficultySelect');
     const masterVolume = document.getElementById('masterVolume');
     const sfxVolume = document.getElementById('sfxVolume');
@@ -408,9 +491,9 @@
     const restartBtn = document.getElementById('restartBtn');
 
     // 画布尺寸
-    const W = 1200, H = 550;
+    const W = 1600, H = 650;
     canvas.width = W; canvas.height = H;
-    const GROUND_Y = H - 70;
+    const GROUND_Y = H - 80;
 
     // 物理参数 - 优化二段跳手感
     const GRAVITY = 0.45;  // 降低重力，更容易控制
@@ -425,15 +508,21 @@
     let sfxGain = null;
 
     const playerImg = new Image();
-    playerImg.src = 'ergo.png';
+    playerImg.src = 'res/ergo.png';
     const bossImg = new Image();
-    bossImg.src = 'ergo2.png';
+    bossImg.src = 'res/ergo2.png';
     const starImg = new Image();
-    starImg.src = 'meat1.png';
+    starImg.src = 'res/meat1.png';
     const handImg = new Image();
-    handImg.src = 'hand.png';
+    handImg.src = 'res/hand.png';
     const shitImg = new Image();
-    shitImg.src = 'shit.png';
+    shitImg.src = 'res/shit.png';
+    const lbImg = new Image();
+    lbImg.src = 'res/lb.png';
+    const ddImg = new Image();
+    ddImg.src = 'res/dd.png';
+    const alImg = new Image();
+    alImg.src = 'res/al.png';
     
     function initAudio() {
         if (audioCtx) return;
@@ -442,8 +531,8 @@
         sfxGain = audioCtx.createGain();
         masterGain.connect(audioCtx.destination);
         sfxGain.connect(masterGain);
-        masterGain.gain.value = 0;
-        sfxGain.gain.value = 0;
+        masterGain.gain.value = 2;
+        sfxGain.gain.value = 2;
     }
 
     function playSound(type) {
@@ -466,6 +555,7 @@
             case 'attack': freq = 220; duration = 0.1; break;
             case 'kill': freq = 110; duration = 0.3; break;
             case 'coin': freq = 783.99; duration = 0.1; break;
+            case 'hit': freq = 330; duration = 0.08; break;  // 短促的命中音
             case 'hurt': freq = 174.61; duration = 0.2; break;
             case 'buy': freq = 659.25; duration = 0.2; break;
             case 'bossHurt': freq = 82.41; duration = 0.3; break;
@@ -498,15 +588,15 @@
 
     // 剧情文本
     const storyParts = [
-        "很久很久以前，在沧县中学里...😃",
-        "生活着一只母狗和一只二狗❤️💕",
-        "美丽的母狗被邪恶的阿力到了四食堂！😭",
-        "勇敢的二狗决定踏上拯救母狗的征程。😡",
-        "神圣的丙友给予了二狗拐子，\n你可以用掴子来对敌人造成伤害😶‍🌫️",
-        "伟大的明峰给予了二狗 白屎💩和红肉🍖 ，\n红肉🍖是你成功的象征，\n而白屎💩可以在办公室购买更多加成！",
-        "接下来，他需要穿越三个危险的地点，分别是 \n高三教学楼😯 \n操场😥 \n四食堂😨 ",
-        "收集白屎，提升实力，\n最终挑战伪装成母狗的大灯Boss！\n并从阿力手中救出母狗！🥶",
-        "准备好开始冒险了吗？🦍"
+        "昔日，沧县中学有一母犬与二狗焉。\n📖译文: 很久很久以前，在沧县中学里...😃\n生活着一只母狗和一只二狗❤️💕",
+        "母犬貌美，为伪人阿力所劫。\n📖译文: 美丽的母狗被邪恶的阿力到了四食堂！😭",
+        "二狗骁勇，毅然赴征程，以救母犬。\n📖译文: 勇敢的二狗决定踏上拯救母狗的征程。😡",
+        "丙友圣明，赠狗以掴子之技。汝可以掴子击人以伤之。\n📖译文: 神圣的丙友给予了二狗拐子，\n你可以用掴子来对敌人造成伤害😶‍🌫️",
+        "明峰伟岸，与狗白屎红肉。红肉者，功成之证也；\n白屎者，可于公署购增益之术也。\n📖译文: 伟大的明峰给予了二狗 白屎💩和红肉🍖 ，\n红肉🍖是你成功的象征，\n而白屎💩可以在办公室购买更多加成！",
+        "于是，狗将历三重险境，一为高三书斋，二为操场，三为四食堂。\n📖译文: 接下来，他需要穿越三个危险的地点，分别是 \n高三教学楼😯 \n操场😥 \n四食堂😨 ",
+        "集白屎，强功力，以战伪作母犬之大灯，救母犬于阿力之手。\n📖译文: 收集白屎，提升实力，\n最终挑战伪装成母狗的大灯Boss！\n并从阿力手中救出母狗！🥶",
+        "君可愿往之？\n📖译文: 准备好开始冒险了吗？🦍",
+        "全文📗：昔日，沧县中学有一母犬与二狗焉。母犬貌美，为伪人阿力所劫。二狗骁勇，毅然赴征程，以救母犬。丙友圣明，赠狗以掴子之技。汝可以掴子击人以伤之。明峰伟岸，与狗白屎红肉。红肉者，功成之证也；白屎者，可于公署购增益之术也。于是，狗将历三重险境，一为高三书斋，二为操场，三为四食堂。集白屎，强功力，以战伪作母犬之大灯，救母犬于阿力之手。君可愿往之？ \n👩‍🏫戴圣于2/18作"
     ];
     let storyIndex = 0;
 
@@ -523,37 +613,37 @@
     storyNextBtn.addEventListener('click', showNextStory);
 
     // 关卡数据
-    const levels = [
+     const levels = [
         { 
             id: 1, 
             name: '初级 高三教学楼', 
-            worldWidth: 15000,
-            goalX: 14500,
+            worldWidth: 18000,  // 增加以适应横屏
+            goalX: 17500,
             stars: 20,
             baseEnemyHp: 2,
             basePlatforms: 'normal',
-            unlocked: true  // 第一关默认解锁
+            unlocked: true
         },
         { 
             id: 2, 
             name: '中级 操场', 
-            worldWidth: 21000,
-            goalX: 20500,
+            worldWidth: 24000,
+            goalX: 23500,
             stars: 25,
-            baseEnemyHp: 3,
+            baseEnemyHp: 4,
             basePlatforms: 'advanced',
             unlocked: false
         },
         { 
             id: 3, 
             name: '最终 <<四食堂>>(阿力和大灯的所在地)', 
-            worldWidth: 27000,
-            goalX: 26500,
+            worldWidth: 30000,
+            goalX: 29500,
             stars: 30,
-            baseEnemyHp: 4,
+            baseEnemyHp: 8,
             basePlatforms: 'expert',
-            unlocked: true,
-            hasBoss: true  // 第三关有Boss
+            unlocked: false,
+            hasBoss: true
         }
     ];
     
@@ -572,22 +662,22 @@
 
     // 玩家属性
     let player = {
-        x: 150, y: GROUND_Y - 55,
-        w: 60, h: 60,
+        x: 200, y: GROUND_Y - 55,
+        w: 100, h: 100,
         vx: 0, vy: 0,
         onGround: false,
         doubleJumpUsed: false,
         dir: 1,
-        hp: 1000,
-        maxHp: 1000,
+        hp: 8,
+        maxHp: 8,
         atk: 1,
-        coins: 10,
+        coins: 12,
         invincible: 0,
         attacking: false,
         attackTimer: 0
     };
     let hand = {
-        w: 60, h: 60,
+        w: 100, h: 100,
     };
 
     // 游戏元素
@@ -625,15 +715,21 @@
             { x: 0, y: GROUND_Y, w: WORLD_WIDTH, h: 70, type: 'normal' }
         ];
 
-        const platformCount = levelId === 1 ? 20 : (levelId === 2 ? 30 : 40);
+        const platformCount = levelId === 1 ? 40 : (levelId === 2 ? 45 : 50);
         for(let i=0; i<platformCount; i++) {
-            let x = 400 + i * 600 + Math.random()*300;
-            if(x > GOAL_X-500) break;
+            let x = 400 + i * level.worldWidth/platformCount + Math.random()*300;
+            if(x > GOAL_X-100) break;
             
             let y = GROUND_Y - 100 - Math.random() * 150;
             if(y < 150) y = 200;
             
             let type = 'normal';
+            if(levelId >= 1) {
+                let rand = Math.random();
+                if(rand < 0.1) type = 'bounce';
+                else if(rand < 0.2) type = 'break';
+                else if(rand < 0.3) type = 'moving';
+            }
             
             if(levelId >= 2) {
                 let rand = Math.random();
@@ -654,8 +750,8 @@
                 bounceFactor: type === 'bounce' ? 1.8 : undefined,
                 broken: false,
                 baseX: type === 'moving' ? x : undefined,
-                moveRange: type === 'moving' ? 200 : undefined,
-                speed: type === 'moving' ? 1 : undefined,
+                moveRange: type === 'moving' ? 300 : undefined,
+                speed: type === 'moving' ? 0.2 : undefined,
                 dir: type === 'moving' ? 1 : undefined
             });
         }
@@ -677,12 +773,17 @@
 
         // 敌人
         enemies = [];
-        const enemyCount = levelId * 6;
+        const enemyCount = levelId * 8;
         for(let i=0; i<enemyCount; i++) {
-            let x = 400 + i * 1200 + Math.random()*500;
-            if(x > GOAL_X-500) break;
+            let x = 400 + i * level.worldWidth/enemyCount + Math.random()*500;
+            if(x > GOAL_X-100) break;
             
             let type = 'walker';
+            if(levelId >= 1) {
+                let rand = Math.random();
+                if(rand < 0.2) type = 'jumper';
+                else if(rand < 0.3) type = 'flyer';
+            }
             if(levelId >= 2) {
                 let rand = Math.random();
                 if(rand < 0.3) type = 'jumper';
@@ -695,16 +796,17 @@
             }
             
             let hp = level.baseEnemyHp * difficulty;
-            if(type === 'jumper') hp = Math.floor(hp * 1.5);
-            if(type === 'flyer') hp = Math.floor(hp * 2);
+            if(type == 'walker') hp = Math.floor(hp +Math.random()*2);
+            if(type == 'jumper') hp = Math.floor(hp * 1.5 +Math.random()*3);
+            if(type == 'flyer') hp = Math.floor(hp * 1.2 - Math.random()*2);
             
             // 增大敌人尺寸
-            let size = type === 'flyer' ? 48 : (type === 'jumper' ? 62 : 115);
+            let size = type === 'flyer' ? 48 : (type === 'jumper' ? 95+ Math.random()*25 : 100+ Math.random()*40);
             
             enemies.push({
                 x: x,
                 y: type === 'flyer' ? 200 + Math.random()*150 : GROUND_Y - size - 5,
-                w: type === 'flyer' ? 38 : (type === 'jumper' ? 40 : 70),
+                w: type === 'flyer' ? 38 : (type === 'jumper' ? 60+Math.random()*20 : 70+Math.random()*20),
                 h: size,
                 type: type,
                 hp: hp,
@@ -747,7 +849,6 @@
         maxHpSpan.innerText = player.maxHp;
         atkSpan.innerText = player.atk;
         coinSpan.innerText = player.coins;
-        levelSpan.innerText = currentLevel;
     }
 
     // 重置当前关卡
@@ -878,10 +979,6 @@
             player.atk += 1;
             player.coins -= 15;
             playSound('buy');
-        } else if(type==='heal' && player.coins>=8 && player.hp < player.maxHp) {
-            player.hp = Math.min(player.maxHp, player.hp+1);
-            player.coins -= 8;
-            playSound('buy');
         }
         updateUI();
         shopCoinSpan.innerText = player.coins;
@@ -894,14 +991,17 @@
         player.attackTimer = 10;
         playSound('attack');
         
-        let attackRange = 60;  // 增加攻击范围
+        let attackRange = hand.w;  // 增加攻击范围
         
         // 攻击普通敌人
         for(let i=0; i<enemies.length; i++) {
             let e = enemies[i];
             if(!e.active) continue;
             let dx = player.dir===1 ? (e.x - (player.x+player.w)) : (player.x - (e.x+e.w));
-            if(Math.abs(dx) < attackRange && Math.abs(e.y - player.y) < 80) {
+            let dy = player.dir===1 ? (e.x - (player.x+player.w)) : (player.x - (e.x+e.w));
+            if(Math.abs(dx) < attackRange && Math.abs(e.y - player.y) < player.h) {
+            // ===== 添加命中音效 =====
+            playSound('hit');  // 命中音效
                 e.hp -= player.atk;
                 if(e.hp <= 0) {
                     e.active = false;
@@ -1078,7 +1178,7 @@
     // 绘制
     function draw() {
         ctx.clearRect(0,0,W,H);
-        let targetCam = player.x - 500;
+        let targetCam = player.x - (W / 3);
         targetCam = Math.max(0, Math.min(targetCam, WORLD_WIDTH-W));
         cameraX = targetCam;
         ctx.save(); ctx.translate(-cameraX,0);
@@ -1108,10 +1208,12 @@
         // 敌人
         enemies.forEach(e=>{
             if(!e.active) return;
-            ctx.fillStyle = e.type==='jumper'? '#d96f4f' : (e.type==='flyer'? '#b45fd9' : '#d94f4f');
-            ctx.fillRect(e.x, e.y, e.w, e.h);
-            ctx.fillStyle='#f00'; ctx.fillRect(e.x, e.y-15, e.w, 8);
-            ctx.fillStyle='#0f0'; ctx.fillRect(e.x, e.y-15, e.w * (e.hp/e.maxHp), 8);
+            let enemyImg = e.type==='jumper'? alImg : (e.type==='flyer'? lbImg : ddImg);
+            // ctxfillStyle = e.type==='jumper'? '#d96f4f' : (e.type==='flyer'? '#b45fd9' : '#d94f4f');
+            // ctx.fillRect(e.x, e.y, e.w, e.h);
+            ctx.drawImage(enemyImg,e.x, e.y, e.w, e.h)
+            // ctx.fillStyle='#f00'; ctx.fillRect(e.x, e.y-15, e.w, 8);
+            // ctx.fillStyle='#0f0'; ctx.fillRect(e.x, e.y-15, e.w * (e.hp/e.maxHp), 8);
         });
 
         // Boss
@@ -1225,12 +1327,6 @@
     document.getElementById('btnJ').addEventListener('mousedown',e=>{e.preventDefault(); doJump();});
     document.getElementById('btnJ').addEventListener('touchstart',e=>{e.preventDefault(); doJump();});
     
-    document.getElementById('btnAttack').addEventListener('mousedown',e=>{e.preventDefault(); performAttack();});
-    document.getElementById('btnAttack').addEventListener('touchstart',e=>{e.preventDefault(); performAttack();});
-    
-    document.getElementById('jumpBig').addEventListener('mousedown',e=>{e.preventDefault(); doJump();});
-    document.getElementById('jumpBig').addEventListener('touchstart',e=>{e.preventDefault(); doJump();});
-    
     document.getElementById('attackBig').addEventListener('mousedown',e=>{e.preventDefault(); performAttack();});
     document.getElementById('attackBig').addEventListener('touchstart',e=>{e.preventDefault(); performAttack();});
 
@@ -1307,16 +1403,15 @@
 
     buyHp.addEventListener('click', ()=>buyItem('hp'));
     buyAtk.addEventListener('click', ()=>buyItem('atk'));
-    buyHeal.addEventListener('click', ()=>buyItem('heal'));
 
     difficultySelect.addEventListener('change', e=>{ difficulty = parseInt(e.target.value); });
     
     masterVolume.addEventListener('input', e=>{ 
-        if(masterGain) masterGain.gain.value = e.target.value/100; 
+        if(masterGain) masterGain.gain.value = e.target.value/50; 
     });
     
     sfxVolume.addEventListener('input', e=>{ 
-        if(sfxGain) sfxGain.gain.value = e.target.value/100; 
+        if(sfxGain) sfxGain.gain.value = e.target.value/50; 
     });
 
     restartBtn.addEventListener('click', (e) => {

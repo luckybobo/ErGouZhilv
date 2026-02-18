@@ -34,20 +34,6 @@
             /* transform: rotate(0deg); */
         }
         
-        /* 横屏容器 */
-        .game-wrapper {
-            background: #2d6d84;
-            padding: 15px;
-            border-radius: 36px;
-            box-shadow: 0 15px 20px rgba(0,0,0,0.7);
-            position: relative;
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            transition: transform 0.3s;
-            transform: rotate(0deg); /* 确保没有旋转 */
-        }
-        
         canvas {
             display: block;
             width: 100%;
@@ -58,7 +44,6 @@
             box-shadow: inset 0 -5px 0 #3d7188, 0 10px 10px rgba(0,0,0,0.5);
             touch-action: none;
         }
-        
         .hud {
             display: flex;
             justify-content: space-between;
@@ -140,39 +125,7 @@
             transform: translateY(3px);
             box-shadow: 0 2px 0 #8b6d44, 0 4px 8px black;
         }
-        
-        /* 横屏提示层 */
-        .orientation-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-            color: white;
-            font-size: 2rem;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .orientation-overlay .icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
-            animation: rotate 2s infinite;
-        }
-        
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(90deg); }
-            50% { transform: rotate(90deg); }
-            75% { transform: rotate(90deg); }
-            100% { transform: rotate(90deg); }
-        }
+
         
         /* 菜单遮罩 */
         .menu-overlay {
@@ -351,7 +304,7 @@
         <h2>🏁 重生之我是二狗之前往二七拯救美女</h2>
         <button id="startGameBtn">▶ 开始游戏 (第1关)</button>
         <button id="levelSelectBtn">🗺️ 选择关卡</button>
-        <button id="shopBtnMain">🛒 商店</button>
+        <button id="shopBtnMain">🛒 办公室(商店)</button>
         <button id="settingsBtnMain">⚙️ 设置</button>
         <button id="closeMenuBtn">✖ 关闭菜单</button>
     </div>
@@ -508,15 +461,23 @@
     let sfxGain = null;
 
     const playerImg = new Image();
-    playerImg.src = 'ergo.png';
+    playerImg.src = 'res/ergo.png';
     const bossImg = new Image();
-    bossImg.src = 'ergo2.png';
+    bossImg.src = 'res/ergo2.png';
     const starImg = new Image();
-    starImg.src = 'meat1.png';
+    starImg.src = 'res/meat1.png';
     const handImg = new Image();
-    handImg.src = 'hand.png';
+    handImg.src = 'res/hand.png';
     const shitImg = new Image();
-    shitImg.src = 'shit.png';
+    shitImg.src = 'res/shit.png';
+    const lbImg = new Image();
+    lbImg.src = 'res/lb.png';
+    const ddImg = new Image();
+    ddImg.src = 'res/dd.png';
+    const alImg = new Image();
+    alImg.src = 'res/al.png';
+    const wxyImg = new Image();
+    wxyImg.src = 'res/wxy.png';
     
     function initAudio() {
         if (audioCtx) return;
@@ -610,7 +571,7 @@
      const levels = [
         { 
             id: 1, 
-            name: '初级 高三教学楼', 
+            name: '普通生 \n高三教学楼', 
             worldWidth: 18000,  // 增加以适应横屏
             goalX: 17500,
             stars: 20,
@@ -620,7 +581,7 @@
         },
         { 
             id: 2, 
-            name: '中级 操场', 
+            name: '珍珠生 \n操场', 
             worldWidth: 24000,
             goalX: 23500,
             stars: 25,
@@ -630,7 +591,7 @@
         },
         { 
             id: 3, 
-            name: '最终 <<四食堂>>(阿力和大灯的所在地)', 
+            name: '清北生 \n四食堂', 
             worldWidth: 30000,
             goalX: 29500,
             stars: 30,
@@ -756,7 +717,7 @@
         for(let i=0; i<obstacleCount; i++) {
             let x = 500 + i * 1500 + Math.random()*500;
             if(x > GOAL_X-300) break;
-            let rh = Math.random()*100
+            let rh = Math.random()*80
             obstacles.push({
                 x: x,
                 y: GROUND_Y-45-rh,
@@ -776,7 +737,7 @@
             if(levelId >= 1) {
                 let rand = Math.random();
                 if(rand < 0.2) type = 'jumper';
-                else if(rand < 0.3) type = 'flyer';
+                else if(rand < 0.35) type = 'flyer';
             }
             if(levelId >= 2) {
                 let rand = Math.random();
@@ -795,12 +756,12 @@
             if(type == 'flyer') hp = Math.floor(hp * 1.2 - Math.random()*2);
             
             // 增大敌人尺寸
-            let size = type === 'flyer' ? 48 : (type === 'jumper' ? 95+ Math.random()*25 : 100+ Math.random()*40);
+            let size = type === 'flyer' ? 158 : (type === 'jumper' ? 140+ Math.random()*50 : 100+ Math.random()*40);
             
             enemies.push({
                 x: x,
-                y: type === 'flyer' ? 200 + Math.random()*150 : GROUND_Y - size - 5,
-                w: type === 'flyer' ? 38 : (type === 'jumper' ? 60+Math.random()*20 : 70+Math.random()*20),
+                y: type === 'flyer' ? 180 + Math.random()*150 : GROUND_Y - size - 5,
+                w: type === 'flyer' ? 108 : (type === 'jumper' ? 60+Math.random()*20 : 100+Math.random()*200),
                 h: size,
                 type: type,
                 hp: hp,
@@ -985,14 +946,15 @@
         player.attackTimer = 10;
         playSound('attack');
         
-        let attackRange = 60;  // 增加攻击范围
+        let attackRange = hand.w;  // 增加攻击范围
         
         // 攻击普通敌人
         for(let i=0; i<enemies.length; i++) {
             let e = enemies[i];
             if(!e.active) continue;
             let dx = player.dir===1 ? (e.x - (player.x+player.w)) : (player.x - (e.x+e.w));
-            if(Math.abs(dx) < attackRange && Math.abs(e.y - player.y) < 80) {
+            let dy = player.dir===1 ? (e.x - (player.x+player.w)) : (player.x - (e.x+e.w));
+            if(Math.abs(dx) < attackRange && Math.abs(e.y - player.y) < player.h) {
             // ===== 添加命中音效 =====
             playSound('hit');  // 命中音效
                 e.hp -= player.atk;
@@ -1137,7 +1099,7 @@
                     if(player.hp<=0) { 
                         gameActive=false; 
                         gameOver=true; 
-                        msgBox.innerText='💀 你的二狗精尽而亡了!'; 
+                        msgBox.innerText='💀 你的二狗跳下讲台摔死了!'; 
                     }
                 }
             }
@@ -1188,9 +1150,18 @@
             ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
         }
         
-        // 障碍物
-        ctx.fillStyle = '#a55'; 
-        obstacles.forEach(ob=>ctx.fillRect(ob.x,ob.y,ob.w,ob.h));
+        // 障碍物 
+        ctx.fillStyle = '#c22d2d';
+        for (let ob of obstacles) {
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                    let spikeX = ob.x + i * (ob.w / 5);
+                    ctx.moveTo(spikeX, ob.y + ob.h);
+                    ctx.lineTo(spikeX + ob.w / 10, ob.y);
+                    ctx.lineTo(spikeX + ob.w / 5, ob.y + ob.h);
+                }
+            ctx.fill();
+        }
         
         // 红肉
         stars.forEach(s=>{ if(!s.got) { ctx.drawImage(starImg,s.x,s.y,s.w,s.h); } });
@@ -1201,8 +1172,10 @@
         // 敌人
         enemies.forEach(e=>{
             if(!e.active) return;
-            ctx.fillStyle = e.type==='jumper'? '#d96f4f' : (e.type==='flyer'? '#b45fd9' : '#d94f4f');
-            ctx.fillRect(e.x, e.y, e.w, e.h);
+            let enemyImg = e.type==='jumper'? alImg : (e.type==='flyer'? wxyImg : ddImg);
+            // ctxfillStyle = e.type==='jumper'? '#d96f4f' : (e.type==='flyer'? '#b45fd9' : '#d94f4f');
+            // ctx.fillRect(e.x, e.y, e.w, e.h);
+            ctx.drawImage(enemyImg,e.x, e.y, e.w, e.h)
             ctx.fillStyle='#f00'; ctx.fillRect(e.x, e.y-15, e.w, 8);
             ctx.fillStyle='#0f0'; ctx.fillRect(e.x, e.y-15, e.w * (e.hp/e.maxHp), 8);
         });
